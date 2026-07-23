@@ -24,7 +24,7 @@ interface PocketSelectProps {
 }
 
 export function PocketSelect({ value, onChange, error }: PocketSelectProps) {
-  const { data, isLoading } = useDashboard()
+  const { data } = useDashboard()
   const [open, setOpen] = useState(false)
   const selected = data?.pockets.find((p) => p.name === value)
 

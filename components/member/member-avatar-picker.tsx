@@ -11,7 +11,7 @@ interface MemberAvatarPickerProps {
 }
 
 export function MemberAvatarPicker({ value, onChange }: MemberAvatarPickerProps) {
-  const { data, isLoading } = useDashboard()
+  const { data } = useDashboard()
 
   if (!data || data.members.length === 0) {
     return (

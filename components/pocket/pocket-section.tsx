@@ -20,7 +20,7 @@ interface PocketSectionProps {
 }
 
 export function PocketSection({ onAddPocket, onEditPocket }: PocketSectionProps) {
-  const { data, isLoading } = useDashboard()
+  const { data } = useDashboard()
   const isReadOnly = !onAddPocket && !onEditPocket
   const regularPockets = data ? data.pockets : []
   const [showAll, setShowAll] = useState(false)
@@ -71,7 +71,7 @@ export function PocketSection({ onAddPocket, onEditPocket }: PocketSectionProps)
           </div>
         )}
 
-        {items.map((item, index) => {
+        {items.map((item) => {
           if (item.type === 'add') {
             return (
               <div key="add-pocket" className="h-full">

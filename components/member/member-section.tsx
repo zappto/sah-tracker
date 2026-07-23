@@ -14,7 +14,7 @@ interface MemberSectionProps {
 }
 
 export function MemberSection({ blinkMember, onEditMember, onAddMember }: MemberSectionProps) {
-  const { data, isLoading } = useDashboard()
+  const { data } = useDashboard()
   const [pinned, setPinned] = useState<string[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const [slide, setSlide] = useState(0)

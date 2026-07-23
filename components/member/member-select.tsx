@@ -12,7 +12,7 @@ interface MemberSelectProps {
 }
 
 export function MemberSelect({ value, onChange, error }: MemberSelectProps) {
-  const { data, isLoading } = useDashboard()
+  const { data } = useDashboard()
   const [open, setOpen] = useState(false)
 
   const selected = data?.members.find((m) => m.name === value)

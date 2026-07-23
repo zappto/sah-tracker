@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { Trash2, Loader2 } from 'lucide-react'
 import { useDashboard } from '@/hooks/use-dashboard'
@@ -33,11 +33,16 @@ interface MemberFormProps {
   onMemberAdded?: (name: string) => void
 }
 
+const formatRupiah = (val: string) => {
+  const digits = val.replace(/\D/g, '')
+  return digits ? `Rp ${Number(digits).toLocaleString('id-ID')}` : ''
+}
+
 export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: MemberFormProps) {
-  const [name, setName] = useState('')
-  const [avatar, _setAvatar] = useState<string | undefined>()
-  const [setorDisplay, setSetorDisplay] = useState('')
-  const [sisaDisplay, setSisaDisplay] = useState('')
+  const [name, setName] = useState(editMember?.name ?? '')
+  const [avatar, _setAvatar] = useState<string | undefined>(editMember?.avatar)
+  const [setorDisplay, setSetorDisplay] = useState(editMember ? formatRupiah(editMember.setor.toString()) : '')
+  const [sisaDisplay, setSisaDisplay] = useState(editMember ? formatRupiah(editMember.sisa.toString()) : '')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const { data } = useDashboard()
@@ -47,28 +52,9 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
 
   const isEdit = !!editMember
 
-  useEffect(() => {
-    if (editMember) {
-      setName(editMember.name)
-      setSetorDisplay(formatRupiah(editMember.setor.toString()))
-      setSisaDisplay(formatRupiah(editMember.sisa.toString()))
-      _setAvatar(editMember.avatar)
-    } else {
-      setName('')
-      setSetorDisplay('')
-      setSisaDisplay('')
-      _setAvatar(undefined)
-    }
-  }, [editMember])
-
   const isDuplicate = data?.members.some(
     (m) => m.name.toLowerCase() === name.trim().toLowerCase() && m.id !== editMember?.id,
   )
-
-  const formatRupiah = (val: string) => {
-    const digits = val.replace(/\D/g, '')
-    return digits ? `Rp ${Number(digits).toLocaleString('id-ID')}` : ''
-  }
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -116,7 +102,7 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
     setTimeout(() => onOpenChange(false), 150)
   }
 
-  const formKey = editMember?.id ?? 'new'
+  const formKey = open ? (editMember?.id ?? 'new') : 'closed'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} key={formKey}>
