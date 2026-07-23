@@ -11,53 +11,49 @@ const MEMBER_NAMES = ['fajar', 'zull', 'nafan', 'alif', 'vicar', 'zovan', 'sapto
 const POCKET_UTAMA = 'Dana Utama'
 
 async function main() {
-  const existingUsers = await prisma.user.findMany()
-  if (existingUsers.length === 0) {
-    await prisma.user.createMany({
-      data: [{ username: 'fajar' }, { username: 'zull' }],
-    })
-    console.log('Seeded users: fajar, zull')
+  const users = ['fajar', 'zull']
+  let usersCreated = 0
+  for (const username of users) {
+    const existing = await prisma.user.findUnique({ where: { username } })
+    if (!existing) {
+      await prisma.user.create({ data: { username } })
+      usersCreated++
+    }
   }
+  if (usersCreated > 0) console.log(`Seeded ${usersCreated} users`)
 
-  const existingMembers = await prisma.member.findMany()
-  if (existingMembers.length === 0) {
-    await prisma.member.createMany({
-      data: MEMBER_NAMES.map((name) => ({
-        name,
-        setor: AMOUNT,
-        sisa: AMOUNT,
-      })),
-    })
-    console.log(`Seeded ${MEMBER_NAMES.length} members (Rp${(AMOUNT / 1_000_000).toLocaleString('id-ID')}.000 each)`)
+  let membersCreated = 0
+  for (const name of MEMBER_NAMES) {
+    const existing = await prisma.member.findUnique({ where: { name } })
+    if (!existing) {
+      await prisma.member.create({
+        data: { name, setor: AMOUNT, sisa: AMOUNT },
+      })
+      membersCreated++
+    }
   }
+  if (membersCreated > 0) console.log(`Seeded ${membersCreated} members (Rp${(AMOUNT / 1_000_000).toLocaleString('id-ID')}.000 each)`)
 
-  const existingTx = await prisma.transaction.findFirst()
-  if (!existingTx) {
-    await prisma.transaction.createMany({
-      data: MEMBER_NAMES.map((name) => ({
-        type: 'income',
-        desc: `Setor ${name}`,
-        amount: AMOUNT,
-        time: '00.00 · Awal',
-        pocket: POCKET_UTAMA,
-        dicatat: name,
-      })),
+  let txCreated = 0
+  for (const name of MEMBER_NAMES) {
+    const existingTx = await prisma.transaction.findFirst({
+      where: { desc: `Setor ${name}`, type: 'income', pocket: POCKET_UTAMA }
     })
-    console.log(`Seeded ${MEMBER_NAMES.length} initial income transactions`)
+    if (!existingTx) {
+      await prisma.transaction.create({
+        data: {
+          type: 'income',
+          desc: `Setor ${name}`,
+          amount: AMOUNT,
+          time: '00.00 · Awal',
+          pocket: POCKET_UTAMA,
+          dicatat: name,
+        },
+      })
+      txCreated++
+    }
   }
-
-  const utama = await prisma.pocket.findUnique({ where: { name: POCKET_UTAMA } })
-  if (!utama) {
-    await prisma.pocket.create({
-      data: {
-        name: POCKET_UTAMA,
-        total: AMOUNT * MEMBER_NAMES.length,
-        spent: 0,
-        icon: 'Wallet',
-      },
-    })
-    console.log(`Seeded pocket: ${POCKET_UTAMA} (Rp${((AMOUNT * MEMBER_NAMES.length) / 1_000_000).toLocaleString('id-ID')}.000)`)
-  }
+  if (txCreated > 0) console.log(`Seeded ${txCreated} initial income transactions`)
 }
 
 main()

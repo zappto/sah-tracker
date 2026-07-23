@@ -7,7 +7,7 @@ describe('createTransactionSchema', () => {
       type: 'income',
       desc: 'Setoran',
       amount: 50000,
-      pocket: 'Dana Utama',
+      pocket: 'Tabungan Utama',
       dicatat: 'Budi',
     })
     expect(result.success).toBe(true)
@@ -48,7 +48,7 @@ describe('createTransactionSchema', () => {
       type: 'transfer',
       desc: 'Test',
       amount: 1000,
-      pocket: 'Dana Utama',
+      pocket: 'Tabungan Utama',
     })
     expect(result.success).toBe(false)
   })
@@ -58,7 +58,7 @@ describe('createTransactionSchema', () => {
       type: 'expense',
       desc: '',
       amount: 1000,
-      pocket: 'Dana Utama',
+      pocket: 'Tabungan Utama',
     })
     expect(result.success).toBe(false)
   })
@@ -68,7 +68,7 @@ describe('createTransactionSchema', () => {
       type: 'expense',
       desc: 'Test',
       amount: 0,
-      pocket: 'Dana Utama',
+      pocket: 'Tabungan Utama',
     })
     expect(result.success).toBe(false)
   })
@@ -78,7 +78,7 @@ describe('createTransactionSchema', () => {
       type: 'expense',
       desc: 'Test',
       amount: -100,
-      pocket: 'Dana Utama',
+      pocket: 'Tabungan Utama',
     })
     expect(result.success).toBe(false)
   })
@@ -98,7 +98,7 @@ describe('createTransactionSchema', () => {
       type: 'expense',
       desc: 'Test',
       amount: 1000,
-      pocket: 'Dana Utama',
+      pocket: 'Tabungan Utama',
       image: 'https://example.com/img.jpg',
     })
     expect(result.success).toBe(true)

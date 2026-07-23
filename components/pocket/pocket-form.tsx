@@ -71,25 +71,28 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
     setValue('budget', e.target.value.replace(/\D/g, ''))
   }
 
-  const TABUNGAN_UTAMA = 'Dana Utama'
-  const isTabunganUtama = editPocket?.name === TABUNGAN_UTAMA
-
   const onSubmit = async () => {
-    if (isTabunganUtama) return
 
     const name = getValues('name')
     const rawBudget = parseInt(getValues('budget') || '0', 10)
     const icon = getValues('icon') || 'Wallet'
 
     if (editPocket) {
+      const diff = rawBudget - editPocket.total
+      if (diff > 0 && (data?.tabunganUtama ?? 0) < diff) {
+        setSaldoError('Saldo Dana Utama tidak mencukupi')
+        return
+      }
+      setSaldoError('')
+
       await updatePocket.mutateAsync({
         id: editPocket.id,
         data: { name, total: rawBudget, icon },
       })
     } else {
-      const utama = data?.pockets.find((p) => p.name === TABUNGAN_UTAMA)
-      if (rawBudget > 0 && (!utama || utama.total - utama.spent < rawBudget)) {
-        setSaldoError('Saldo Tabungan Utama tidak mencukupi')
+      const tabunganUtama = data?.tabunganUtama ?? 0
+      if (rawBudget > 0 && tabunganUtama < rawBudget) {
+        setSaldoError('Saldo Dana Utama tidak mencukupi')
         return
       }
       setSaldoError('')
@@ -100,7 +103,7 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
   }
 
   const handleDelete = async () => {
-    if (!editPocket || isTabunganUtama) return
+    if (!editPocket) return
     await deletePocket.mutateAsync(editPocket.id)
     setDeleteOpen(false)
     onSuccess?.()
@@ -125,12 +128,11 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
         }}
       />
       {(() => {
-        const utama = data?.pockets.find((p) => p.name === TABUNGAN_UTAMA)
-        if (!utama || isEdit) return null
-        const saldo = utama.total - utama.spent
+        if (isEdit || data?.tabunganUtama === undefined) return null
+        const saldo = data.tabunganUtama
         return (
           <div className="flex items-center justify-between -mt-3 px-2">
-            <span className="text-[11px] text-text-muted">Ambil dari Tabungan Utama</span>
+            <span className="text-[11px] text-text-muted">Ambil dari Dana Utama</span>
             <span className="text-[11px] font-mono text-text-muted">{formatRp(saldo)}</span>
           </div>
         )
@@ -150,7 +152,7 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
         )}
       </Button>
 
-      {isEdit && !isTabunganUtama && (
+      {isEdit && (
         <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
           <AlertDialogTrigger render={<Button variant="destructive" className="w-full h-11 text-base" />}>
             <Trash2 className="h-5 w-5" />

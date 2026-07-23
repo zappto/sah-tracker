@@ -27,7 +27,7 @@ describe('Transactions API', () => {
         type: 'income',
         desc: 'Test Income',
         amount: 50000,
-        pocket: 'Dana Utama',
+        pocket: 'Tabungan Utama',
         dicatat: 'fajar',
       })
     expect(res.status).toBe(201)
@@ -46,7 +46,7 @@ describe('Transactions API', () => {
         type: 'expense',
         desc: 'Test Expense',
         amount: 25000,
-        pocket: 'Dana Utama',
+        pocket: 'Tabungan Utama',
         dicatat: 'fajar',
       })
     expect(res.status).toBe(201)
@@ -63,7 +63,7 @@ describe('Transactions API', () => {
         type: 'transfer',
         desc: 'Invalid',
         amount: 1000,
-        pocket: 'Dana Utama',
+        pocket: 'Tabungan Utama',
       })
     expect(res.status).toBe(400)
   })
@@ -78,7 +78,7 @@ describe('Transactions API', () => {
         type: 'expense',
         desc: '',
         amount: 1000,
-        pocket: 'Dana Utama',
+        pocket: 'Tabungan Utama',
       })
     expect(res.status).toBe(400)
   })
@@ -93,7 +93,7 @@ describe('Transactions API', () => {
         type: 'expense',
         desc: 'Test',
         amount: 0,
-        pocket: 'Dana Utama',
+        pocket: 'Tabungan Utama',
       })
     expect(res.status).toBe(400)
   })
@@ -118,7 +118,7 @@ describe('Transactions API', () => {
         type: 'income',
         desc: 'Get By ID',
         amount: 10000,
-        pocket: 'Dana Utama',
+        pocket: 'Tabungan Utama',
         dicatat: 'fajar',
       })
 

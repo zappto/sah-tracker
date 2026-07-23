@@ -62,8 +62,15 @@ export async function getDashboard(): Promise<IDashboardData> {
   const pockets = dbPockets.map(mapPocket)
   const transactions = dbTransactions.map(mapTransaction)
 
+  const summary = calcSummary(transactions)
+  
+  // Calculate Tabungan Utama: total income (from all members, etc.) minus total allocated to pockets
+  const totalAllocated = pockets.reduce((sum, p) => sum + p.total, 0)
+  const tabunganUtama = summary.income - totalAllocated
+
   return {
-    summary: calcSummary(transactions),
+    summary,
+    tabunganUtama,
     members,
     pockets,
     transactions,

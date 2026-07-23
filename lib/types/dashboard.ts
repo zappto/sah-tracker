@@ -36,6 +36,7 @@ export interface ISummary {
 
 export interface IDashboardData {
   summary: ISummary
+  tabunganUtama: number
   members: IMember[]
   pockets: IPocketData[]
   transactions: ITransaction[]

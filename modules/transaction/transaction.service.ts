@@ -45,15 +45,19 @@ export async function create(data: TCreateTransactionInput) {
           },
         })
       }
-      await prisma.pocket.update({
-        where: { name: data.pocket },
-        data: { total: { increment: data.amount } },
-      })
+      if (data.pocket !== 'Tabungan Utama' && data.pocket !== 'Dana Utama') {
+        await prisma.pocket.update({
+          where: { name: data.pocket },
+          data: { total: { increment: data.amount } },
+        })
+      }
     } else {
-      await prisma.pocket.update({
-        where: { name: data.pocket },
-        data: { spent: { increment: data.amount } },
-      })
+      if (data.pocket !== 'Tabungan Utama' && data.pocket !== 'Dana Utama') {
+        await prisma.pocket.update({
+          where: { name: data.pocket },
+          data: { spent: { increment: data.amount } },
+        })
+      }
     }
 
     return tx

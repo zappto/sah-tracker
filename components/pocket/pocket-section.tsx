@@ -22,20 +22,21 @@ interface PocketSectionProps {
 export function PocketSection({ onAddPocket, onEditPocket }: PocketSectionProps) {
   const { data, isLoading } = useDashboard()
   const isReadOnly = !onAddPocket && !onEditPocket
-  const utama = data?.pockets.find((p) => p.name === 'Dana Utama')
-  const regularPockets = data ? data.pockets.filter((p) => p.name !== 'Dana Utama') : []
+  const regularPockets = data ? data.pockets : []
   const [showAll, setShowAll] = useState(false)
   const sliced = showAll ? regularPockets : regularPockets.slice(0, 2)
-  const displayPockets = utama ? [utama, ...sliced] : sliced
+  const displayPockets = sliced
   if (!data) return null
 
   const items: ({ type: 'pocket'; data: IPocketData } | { type: 'add' })[] = []
   if (!isReadOnly) {
-    displayPockets.forEach((p, i) => {
-      if (i === 0) items.push({ type: 'add' })
-      items.push({ type: 'pocket', data: p })
-    })
-    if (displayPockets.length < 1) items.push({ type: 'add' })
+    if (displayPockets.length > 0) {
+      items.push({ type: 'add' })
+    }
+    displayPockets.forEach((p) => items.push({ type: 'pocket', data: p }))
+    if (displayPockets.length === 0) {
+      items.push({ type: 'add' })
+    }
   } else {
     displayPockets.forEach((p) => items.push({ type: 'pocket', data: p }))
   }
@@ -59,7 +60,18 @@ export function PocketSection({ onAddPocket, onEditPocket }: PocketSectionProps)
         )}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {items.map((item) => {
+        {/* Special Tabungan Utama Card */}
+        {data.tabunganUtama !== undefined && (
+          <div className="flex flex-col gap-1.5 rounded-sm border border-primary-300 bg-primary-50/30 px-3 py-2.5">
+            <div className="flex items-center gap-1.5">
+              <Wallet className="h-3.5 w-3.5 text-primary-500" />
+              <p className="text-xs font-semibold text-primary-700">Tabungan Utama</p>
+            </div>
+            <p className="text-xs font-mono font-medium text-primary-700 mt-auto">Sisa {formatRp(data.tabunganUtama)}</p>
+          </div>
+        )}
+
+        {items.map((item, index) => {
           if (item.type === 'add') {
             return (
               <div key="add-pocket" className="h-full">
@@ -85,7 +97,7 @@ export function PocketSection({ onAddPocket, onEditPocket }: PocketSectionProps)
             <div key={pocket.name}>
               {(() => {
                   const cardContent = (
-                    <div className={`flex flex-col gap-1.5 rounded-sm border bg-white px-3 py-2.5 ${pocket.name === 'Dana Utama' ? 'border-primary-300 bg-primary-50/30' : 'border-border-subtle'}`}>
+                    <div className="flex flex-col gap-1.5 rounded-sm border bg-white px-3 py-2.5 border-border-subtle h-full">
                       <div className="flex items-center gap-1.5">
                         <Icon className="h-3.5 w-3.5 text-text-muted" />
                         <p className="text-xs font-semibold text-text-primary">{pocket.name}</p>
@@ -99,7 +111,6 @@ export function PocketSection({ onAddPocket, onEditPocket }: PocketSectionProps)
                     </div>
                   )
                   if (!onEditPocket) return cardContent
-                  if (pocket.name === 'Dana Utama') return cardContent
                   return (
                     <button
                       type="button"

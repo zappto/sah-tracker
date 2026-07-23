@@ -15,7 +15,7 @@ import {
 import { getPastelColor } from '@/lib/utils'
 import { Users } from 'lucide-react'
 
-const TABUNGAN_UTAMA = 'Dana Utama'
+const TABUNGAN_UTAMA = 'Tabungan Utama'
 
 interface IncomeFormProps {
   onSuccess?: () => void
