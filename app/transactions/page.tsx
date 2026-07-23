@@ -69,7 +69,10 @@ function TransactionsPageInner() {
                       </span>
                       <span className="flex items-center gap-1 text-caption text-text-muted leading-none">
                         <User className="h-2.5 w-2.5" />
-                        {tx.dicatat}
+                        {(() => {
+                          const memberExists = data?.members.some(m => m.name === tx.dicatat)
+                          return memberExists && tx.dicatat ? tx.dicatat : '-'
+                        })()}
                       </span>
                     </div>
                   </div>

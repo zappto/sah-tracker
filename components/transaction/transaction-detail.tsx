@@ -6,12 +6,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { formatRp } from '@/lib/utils'
 import type { ITransaction } from '@/lib/types/dashboard'
 
+import { useDashboard } from '@/hooks/use-dashboard'
+
 interface TransactionDetailProps {
   transaction: ITransaction | null
   onClose: () => void
 }
 
 export function TransactionDetail({ transaction, onClose }: TransactionDetailProps) {
+  const { data } = useDashboard()
+  
   if (!transaction) return null
 
   const isIncome = transaction.type === 'income'
@@ -52,7 +56,10 @@ export function TransactionDetail({ transaction, onClose }: TransactionDetailPro
               <p className="text-xs text-text-muted">Dicatat oleh</p>
               <div className="flex items-center gap-1 text-xs font-medium text-text-primary">
                 <User className="h-3 w-3 text-text-muted" />
-                {transaction.dicatat}
+                {(() => {
+                  const memberExists = data?.members.some(m => m.name === transaction.dicatat)
+                  return memberExists && transaction.dicatat ? transaction.dicatat : '-'
+                })()}
               </div>
             </div>
 

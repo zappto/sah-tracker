@@ -36,12 +36,7 @@ export async function update(id: string, data: TUpdateMemberInput) {
 
 export async function remove(id: string) {
   const member = await getById(id)
-  const txCount = await repo.countTransactions(member.name)
-  if (txCount > 0) {
-    throw AppError.conflict(
-      'Member memiliki riwayat transaksi dan tidak dapat dihapus',
-    )
-  }
+  // Check removed: allow deletion even if member has transactions
   const result = await repo.remove(id)
   publish({ type: 'FINANCE_UPDATED' })
   return result
