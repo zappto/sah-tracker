@@ -106,7 +106,7 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
     if (!editPocket) return
     await deletePocket.mutateAsync(editPocket.id)
     setDeleteOpen(false)
-    onSuccess?.()
+    setTimeout(() => onSuccess?.(), 150)
   }
 
   const isEdit = !!editPocket

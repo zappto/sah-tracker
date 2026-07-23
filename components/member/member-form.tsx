@@ -52,10 +52,12 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
       setName(editMember.name)
       setSetorDisplay(formatRupiah(editMember.setor.toString()))
       setSisaDisplay(formatRupiah(editMember.sisa.toString()))
+      _setAvatar(editMember.avatar)
     } else {
       setName('')
       setSetorDisplay('')
       setSisaDisplay('')
+      _setAvatar(undefined)
     }
   }, [editMember])
 
@@ -98,10 +100,10 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
     if (isEdit && editMember) {
       await updateMember.mutateAsync({
         id: editMember.id,
-        data: { name: trimmed, setor: rawSetor, sisa: rawSisa },
+        data: { name: trimmed, setor: rawSetor, sisa: rawSisa, avatar: avatar ?? null },
       })
     } else {
-      await createMember.mutateAsync({ name: trimmed, setor: rawSetor, sisa: rawSisa })
+      await createMember.mutateAsync({ name: trimmed, setor: rawSetor, sisa: rawSisa, avatar })
       onMemberAdded?.(trimmed)
     }
     onOpenChange(false)
@@ -111,7 +113,7 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
     if (!editMember) return
     await deleteMember.mutateAsync(editMember.id)
     setDeleteOpen(false)
-    onOpenChange(false)
+    setTimeout(() => onOpenChange(false), 150)
   }
 
   const formKey = editMember?.id ?? 'new'
