@@ -123,8 +123,6 @@ sah-tracker/
 │
 ├── AGENTS.md                      # AI agent instructions (this file)
 ├── CLAUDE.md                      # Alias → AGENTS.md
-├── PRD.md                         # Product requirements
-├── TRD.md                         # Technical requirements
 ├── DESIGN.md                      # Design specification (READ BEFORE UI WORK)
 ├── README.md                      # Project setup docs
 ├── components.json                # shadcn/ui config (base-nova style)
@@ -134,74 +132,53 @@ sah-tracker/
 │   ├── schema.prisma              # Database schema
 │   └── migrations/                # Migration history
 │
-├── app/                           # Root layout, globals, providers (Next.js 16)
-│   ├── globals.css                # Tailwind v4 + shadcn CSS variables
+├── app/                           # All routes, layout, globals
+│   ├── globals.css                # Tailwind v4 + shadcn CSS variables + tokens
 │   ├── layout.tsx                 # Root layout (font loading, html/body)
-│   └── page.tsx                   # Default home page (template)
+│   ├── page.tsx                   # Main public dashboard
+│   ├── transactions/
+│   │   └── page.tsx               # All transactions page
+│   ├── admin/                     # Admin pages (planned)
+│   ├── api/                       # REST API + SSE endpoints (planned)
+│   └── (public)/                  # Route group (placeholder)
 │
-├── src/
-│   ├── app/                       # Application routes
-│   │   ├── (public)/              # Guest pages (no auth)
-│   │   │   └── page.tsx           # Main public dashboard
-│   │   │
-│   │   ├── admin/                 # Admin pages (authenticated)
-│   │   │   ├── page.tsx           # Admin dashboard
-│   │   │   └── login/page.tsx     # Admin login
-│   │   │
-│   │   ├── api/                   # REST API + SSE endpoints
-│   │   │   ├── auth/login/route.ts
-│   │   │   ├── auth/logout/route.ts
-│   │   │   ├── auth/me/route.ts
-│   │   │   ├── dashboard/route.ts
-│   │   │   ├── events/route.ts    # SSE endpoint
-│   │   │   ├── members/route.ts + [id]/route.ts
-│   │   │   ├── pockets/route.ts + [id]/route.ts
-│   │   │   └── transactions/route.ts + [id]/route.ts
-│   │   │
-│   │   ├── layout.tsx             # Root app layout
-│   │   └── globals.css            # App-specific styles
-│   │
-│   ├── components/                # React components by domain
-│   │   ├── ui/                    # Generic UI (shadcn components)
-│   │   ├── dashboard/             # Dashboard-specific components
-│   │   ├── member/                # Member components
-│   │   ├── pocket/                # Pocket components
-│   │   ├── transaction/           # Transaction components
-│   │   └── admin/                 # Admin-specific components
-│   │
-│   ├── hooks/                     # TanStack Query hooks + SSE hook
-│   │   ├── use-dashboard.ts
-│   │   ├── use-members.ts
-│   │   ├── use-pockets.ts
-│   │   ├── use-transactions.ts
-│   │   └── use-financial-events.ts
-│   │
-│   ├── modules/                   # Business logic per domain
-│   │   ├── auth/                  # auth.service.ts, schema, types, session
-│   │   ├── dashboard/             # dashboard.service.ts, types
-│   │   ├── member/                # service, repository, schema, types
-│   │   ├── pocket/                # service, repository, schema, types
-│   │   └── transaction/           # service, repository, schema, calculator, types
-│   │
-│   ├── lib/                       # Shared utilities
-│   │   ├── db/prisma.ts           # Prisma client singleton
-│   │   ├── events/                # event-bus.ts, types, sse-manager
-│   │   ├── errors/                # app-error.ts, error-handler.ts
-│   │   ├── http/                  # api-client.ts, api-response.ts
-│   │   ├── money/                 # format-money.ts, money-calculator.ts
-│   │   └── utils/                 # Utility functions
-│   │
-│   ├── providers/
-│   │   └── query-provider.tsx     # TanStack Query provider
-│   │
-│   └── types/
-│       └── api.ts                 # Shared API response types
+├── lib/                           # Shared utilities
+│   ├── data/transactions.ts       # Mock transaction data
+│   ├── hooks/
+│   │   └── use-local-storage.ts   # useSyncExternalStore localStorage hook
+│   ├── db/                        # Prisma client singleton (planned)
+│   ├── events/                    # event-bus.ts, types, sse-manager (planned)
+│   ├── errors/                    # app-error.ts, error-handler.ts (planned)
+│   ├── http/                      # api-client.ts, api-response.ts (planned)
+│   ├── money/                     # format-money.ts, money-calculator.ts (planned)
+│   └── utils/                     # cn(), formatRp, pastelColors, smoothScrollTo
 │
-├── components/                    # Global shadcn components
-│   └── ui/button.tsx              # Button (Base UI + CVA)
+├── components/                    # UI components by domain
+│   ├── ui/                        # shadcn components (base-nova style)
+│   │   ├── button.tsx             # Base UI + CVA button
+│   │   ├── badge.tsx              # Badge tag (pocket labels, status)
+│   │   └── card.tsx               # Card container + Header/Content/Footer
+│   ├── dashboard/                 # Dashboard layout components
+│   │   ├── header.tsx             # Sticky header (app title + Login)
+│   │   └── summary-card.tsx       # Balance overview card (total, income, expense)
+│   ├── member/
+│   │   └── member-section.tsx     # Horizontal carousel, pin toggle, dot nav
+│   ├── pocket/
+│   │   └── pocket-section.tsx     # Grid cards with show-more toggle + motion
+│   ├── transaction/
+│   │   └── transaction-section.tsx # 5 newest transactions list
+│   └── admin/                     # Admin-specific components (planned)
 │
-├── lib/                           # Global utilities
-│   └── utils.ts                   # cn() helper
+├── providers/
+│   └── query-provider.tsx         # TanStack Query provider
+│
+├── docs/
+│   ├── design.md                  # Canonical design spec
+│   ├── prd.md                     # Product requirements
+│   ├── trd.md                     # Technical requirements
+│   ├── db.md                      # Database schema docs
+│   ├── milestones-fe.md           # Frontend milestones
+│   └── milestones-be.md           # Backend milestones
 │
 ├── .env.example
 ├── package.json
@@ -218,6 +195,7 @@ sah-tracker/
 - **Components:** Add via `npx shadcn@latest add <component>`.
 - **CS variables** for theming (light/dark).
 - **Button:** Already installed at `components/ui/button.tsx` — uses `@base-ui/react/button` + `class-variance-authority`.
+- **Badge, Card:** Installed at `components/ui/badge.tsx`, `components/ui/card.tsx`.
 
 ---
 
@@ -226,12 +204,29 @@ sah-tracker/
 | Location | Purpose |
 |----------|---------|
 | `app/` (root) | Root layout, globals, providers. This is where Next.js 16 expects `globals.css`. |
-| `src/app/` | Application routes, pages, and API endpoints. |
-| `src/components/` | Domain-specific components. |
-| `components/` (root) | Global shadcn components installed via CLI. |
-| `src/modules/` | Business logic (service + repository + schema per domain). |
-| `src/hooks/` | TanStack Query wrappers and SSE hook. |
-| `src/lib/` | Shared infrastructure (db, events, errors, http, money). |
+| `app/` | Application routes, pages, and API endpoints. |
+| `components/` | Domain-specific components + global shadcn components. |
+| `lib/` | Shared utilities (data, db, events, errors, http, money). |
+| `providers/` | React context providers. |
+
+---
+
+# Component Organization
+
+Setiap section pada dashboard dipisah ke file sendiri di dalam `components/{domain}/`:
+
+| Domain | Path | File |
+|--------|------|------|
+| Dashboard | `components/dashboard/` | `header.tsx`, `summary-card.tsx` |
+| Member | `components/member/` | `member-section.tsx` |
+| Pocket | `components/pocket/` | `pocket-section.tsx` |
+| Transaction | `components/transaction/` | `transaction-section.tsx` |
+| UI | `components/ui/` | `badge.tsx`, `button.tsx`, `card.tsx` (shadcn) |
+
+**Rules:**
+- **Cek dulu** — sebelum buat component baru, periksa apakah sudah ada di `components/{domain}/` atau `components/ui/`. Jangan duplikasi.
+- **shadcn untuk UI kecil** — button, badge, card, dan komponen UI kecil lainnya harus pakai shadcn (`components/ui/`). Jika komponen shadcn belum ada, install dulu via `npx shadcn@latest add <component>`.
+- **Domain component folder** — component besar/section pindah ke `components/{domain}/`.
 
 ---
 
@@ -243,6 +238,61 @@ sah-tracker/
 4. **Accessibility.** WCAG AA minimum. Touch targets ≥ 44×44px. Keyboard nav. `aria-labels` on icon-only buttons.
 5. **No Prisma in components.** See architecture dependency flow.
 6. **Forms.** Use react-hook-form + Zod schema. Label above input. Error below field. Button disabled during submit.
+
+---
+
+# TypeScript Strict Rules — STRICT
+
+**DILARANG KERAS:**
+- `any` — tidak boleh digunakan dalam bentuk apapun
+- `unknown` — tidak boleh digunakan
+- `// @ts-nocheck`, `// @ts-ignore`, `// eslint-disable-next-line` — dilarang
+- Non-null assertion `!` — dilarang (kecuali untuk type predicate yang sudah divalidasi)
+- Type assertion `as` — dilarang, gunakan type narrowing, type guard, atau zod parsing
+
+**WAJIB:**
+- Setiap file TypeScript harus `strict: true` di tsconfig (sudah aktif)
+- Manfaatkan **generics** untuk reusable logic (parameterized types)
+- Gunakan **type narrowing** (typeof, instanceof, discriminated union, type guard) daripada type assertion
+- Zod untuk validasi runtime data dari API/form
+- `satisfies` keyword untuk type-checking tanpa widening
+
+**Prefix Convention:**
+
+| Prefix | For | Contoh |
+|--------|-----|--------|
+| `I` | Interface (object shape) | `IMember`, `ITransaction` |
+| `T` | Type alias | `TMemberResponse`, `TPocketSummary` |
+| `G` (generic) | Generic type parameter | `<GData>`, `<GId extends string>` |
+| `Props` | Component props type | `MemberCardProps`, `TransactionSectionProps` |
+| `Params` | Function parameters | `CreateMemberParams`, `FetchPocketsParams` |
+| `Res` | API response type | `DashboardRes`, `MemberListRes` |
+
+**Contoh benar:**
+```ts
+// ✅ Good: interface + generic
+interface IMember<TId extends string> {
+  id: TId
+  name: string
+  setor: number
+}
+
+// ✅ Good: discriminated union + type guard
+type TTransactionType = 'income' | 'expense'
+
+interface ITransaction {
+  type: TTransactionType
+  amount: number
+}
+
+const isIncome = (tx: ITransaction): tx is ITransaction & { type: 'income' } =>
+  tx.type === 'income'
+
+// ✅ Good: satisfies for literal inference
+const COLORS = { red: '#F00', green: '#0F0' } as const satisfies Record<string, string>
+
+// ❌ Bad: any, unknown, as, !, ts-ignore
+```
 
 ---
 
@@ -277,5 +327,7 @@ Mutation (service)
 5. **Mobile-only** — no desktop layout, no breakpoints, full viewport width.
 6. **Admin via modal/drawer** — no separate admin pages for CRUD.
 7. **Keep it simple** — don't overengineer. Not a banking app, not a SaaS.
+8. **Check before build** — sebelum buat UI component, cek dulu di `components/{domain}/` atau `components/ui/`. Jangan duplikasi.
+9. **shadcn untuk UI kecil** — install via `npx shadcn@latest add <component>` jika belum ada. Jangan bikin manual button/badge/card.
 
 <!-- END:nextjs-agent-rules -->

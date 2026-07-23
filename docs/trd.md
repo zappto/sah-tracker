@@ -163,19 +163,35 @@ app/ (root layout + globals + providers)
     └── transactions/route.ts + [id]/route.ts
 ```
 
-## 5.2 Component Hierarchy (Dashboard Page)
+## 5.2 Component Organization
+
+Setiap section dashboard dipisah ke file sendiri di `components/{domain}/`:
+
+| Domain | Path | File |
+|--------|------|------|
+| Dashboard | `components/dashboard/` | `header.tsx`, `summary-card.tsx` |
+| Member | `components/member/` | `member-section.tsx` |
+| Pocket | `components/pocket/` | `pocket-section.tsx` |
+| Transaction | `components/transaction/` | `transaction-section.tsx` |
+| UI | `components/ui/` | `badge.tsx`, `button.tsx`, `card.tsx` (shadcn) |
+
+**Rules:**
+- Cek `components/{domain}/` atau `components/ui/` sebelum buat component baru. Jangan duplikasi.
+- UI kecil (button, badge, card) pakai shadcn. Install via `npx shadcn@latest add <component>` jika belum ada.
+- Component besar/section pindah ke `components/{domain}/`.
+
+## 5.3 Component Hierarchy (Dashboard Page)
 
 ```
 DashboardPage (RSC)
-├── DashboardSummary (card: total balance, income, expenses)
-├── PocketList (grid of pocket cards)
-│   └── PocketCard (name, balance, progress)
-├── MemberList (member cards with balances)
-│   └── MemberCard (avatar, name, balance, deposit button)
-├── TransactionList (recent transactions)
-│   └── TransactionRow (description, amount, date, pocket)
-└── LoadingSkeleton (shown during data fetch)
-    └── SkeletonCard × N
+├── Header (app title + Login button)
+├── SummaryCard (total balance, income, expenses)
+├── MemberSection (horizontal carousel of member cards)
+│   └── MemberCard (avatar, name, balance stats, pin button)
+├── PocketSection (grid of pocket cards with show-more toggle)
+│   └── PocketCard (name, remaining/spent, progress bar)
+└── TransactionSection (5 newest transactions)
+    └── TransactionRow (description, amount, pocket badge, time)
 ```
 
 ## 5.3 Admin Action Pattern
@@ -357,4 +373,65 @@ pocket.currentBalance =
 ```
 All expense allocation amounts must equal the expense total amount.
 No financial record can be updated or deleted after creation (append-only).
+```
+
+---
+
+# 14. TypeScript Strict Rules
+
+## 14.1 Absolute Bans
+
+| Practice | Status | Alternative |
+|----------|--------|-------------|
+| `any` | ❌ Dilarang | Gunakan generic atau interface eksplisit |
+| `unknown` | ❌ Dilarang | Gunakan discriminated union + type narrowing |
+| `// @ts-nocheck`, `// @ts-ignore` | ❌ Dilarang | Perbaiki type error langsung |
+| `// eslint-disable-next-line` | ❌ Dilarang | Ikuti rule, jangan dimatikan |
+| Non-null assertion `!` | ❌ Dilarang | Type predicate yang sudah divalidasi |
+| Type assertion `as` | ❌ Dilarang | Type narrowing, type guard, atau Zod |
+
+## 14.2 Mandatory Practices
+
+- Setiap file TypeScript menggunakan `strict: true` (aktif via tsconfig)
+- **Generics** untuk reusable logic (parameterized types)
+- **Type narrowing** (`typeof`, `instanceof`, discriminated union, type guard)
+- **Zod** untuk validasi runtime data dari API/form
+- **`satisfies`** keyword untuk type-checking tanpa widening
+
+## 14.3 Naming Convention
+
+| Prefix | Untuk | Contoh |
+|--------|-------|--------|
+| `I` | Interface (object shape) | `IMember`, `ITransaction` |
+| `T` | Type alias | `TMemberResponse`, `TPocketSummary` |
+| `G` (generic) | Generic type parameter | `<GData>`, `<GId extends string>` |
+| `Props` | Component props type | `MemberCardProps` |
+| `Params` | Function parameters | `CreateMemberParams` |
+| `Res` | API response type | `DashboardRes` |
+
+## 14.4 Correct Examples
+
+```ts
+// ✅ Interface + generic
+interface IMember<TId extends string> {
+  id: TId
+  name: string
+  setor: number
+}
+
+// ✅ Discriminated union + type guard
+type TTransactionType = 'income' | 'expense'
+
+interface ITransaction {
+  type: TTransactionType
+  amount: number
+}
+
+const isIncome = (tx: ITransaction): tx is ITransaction & { type: 'income' } =>
+  tx.type === 'income'
+
+// ✅ satisfies for literal inference
+const COLORS = { red: '#F00', green: '#0F0' } as const satisfies Record<string, string>
+
+// ❌ any, unknown, as, !, ts-ignore — semua dilarang
 ```
