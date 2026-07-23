@@ -99,10 +99,11 @@ export function PocketSection({ onAddPocket, onEditPocket }: PocketSectionProps)
                     </div>
                   )
                   if (!onEditPocket) return cardContent
+                  if (pocket.name === 'Dana Utama') return cardContent
                   return (
                     <button
                       type="button"
-                      onClick={() => pocket.name !== 'Dana Utama' && onEditPocket(pocket.name)}
+                      onClick={() => onEditPocket(pocket.name)}
                       className="w-full text-left active:scale-[0.98] transition-transform"
                       style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
                     >

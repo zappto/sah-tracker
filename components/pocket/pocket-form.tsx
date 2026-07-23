@@ -75,6 +75,8 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
   const isTabunganUtama = editPocket?.name === TABUNGAN_UTAMA
 
   const onSubmit = async () => {
+    if (isTabunganUtama) return
+
     const name = getValues('name')
     const rawBudget = parseInt(getValues('budget') || '0', 10)
     const icon = getValues('icon') || 'Wallet'

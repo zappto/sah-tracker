@@ -60,6 +60,7 @@ function AdminDashboardInner() {
 
   const openCreateDrawer = () => setDrawer({ mode: 'pocket-create', title: 'Buat Pocket Baru' })
   const openEditDrawer = (name: string) => {
+    if (name === 'Dana Utama') return
     const pocket = data?.pockets.find((p) => p.name === name)
     if (pocket) setDrawer({ mode: 'pocket-edit', title: `Edit ${pocket.name}`, pocket })
   }
