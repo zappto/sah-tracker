@@ -1,3 +1,4 @@
+import { prisma } from '@/lib/db/prisma'
 import { AppError } from '@/lib/errors/app-error'
 import { publish } from '@/lib/events/event-bus'
 import * as repo from './pocket.repository'
@@ -36,13 +37,16 @@ export async function update(id: string, data: TUpdatePocketInput) {
 
 export async function remove(id: string) {
   const pocket = await getById(id)
-  const txCount = await repo.countExpenses(pocket.name)
-  if (txCount > 0) {
-    throw AppError.conflict(
-      'Pocket memiliki riwayat transaksi dan tidak dapat dihapus',
-    )
-  }
-  const result = await repo.remove(id)
+  
+  await prisma.$transaction(async (tx) => {
+    await tx.transaction.updateMany({
+      where: { pocket: pocket.name },
+      data: { pocket: 'Tabungan Utama' },
+    })
+    
+    await tx.pocket.delete({ where: { id } })
+  })
+
   publish({ type: 'FINANCE_UPDATED' })
-  return result
+  return pocket
 }

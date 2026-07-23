@@ -55,17 +55,20 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
   useEffect(() => {
     let mounted = true
     if (open && mounted) {
-      if (editMember) {
-        setName(editMember.name)
-        setSetorDisplay(formatRupiah(editMember.setor.toString()))
-        setSisaDisplay(formatRupiah(editMember.sisa.toString()))
-        _setAvatar(editMember.avatar)
-      } else {
-        setName('')
-        setSetorDisplay('')
-        setSisaDisplay('')
-        _setAvatar(undefined)
-      }
+      setTimeout(() => {
+        if (!mounted) return
+        if (editMember) {
+          setName(editMember.name)
+          setSetorDisplay(formatRupiah(editMember.setor.toString()))
+          setSisaDisplay(formatRupiah(editMember.sisa.toString()))
+          _setAvatar(editMember.avatar)
+        } else {
+          setName('')
+          setSetorDisplay('')
+          setSisaDisplay('')
+          _setAvatar(undefined)
+        }
+      }, 0)
     }
     return () => { mounted = false }
   }, [open, editMember])
