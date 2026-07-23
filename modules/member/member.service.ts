@@ -1,3 +1,4 @@
+import { prisma } from '@/lib/db/prisma'
 import { AppError } from '@/lib/errors/app-error'
 import { publish } from '@/lib/events/event-bus'
 import * as repo from './member.repository'
@@ -36,8 +37,29 @@ export async function update(id: string, data: TUpdateMemberInput) {
 
 export async function remove(id: string) {
   const member = await getById(id)
-  // Check removed: allow deletion even if member has transactions
-  const result = await repo.remove(id)
+  
+  const terpakai = member.setor - member.sisa
+  const remainingCount = await prisma.member.count() - 1
+
+  await prisma.$transaction(async (tx) => {
+    if (remainingCount > 0 && terpakai > 0) {
+      const split = Math.floor(terpakai / remainingCount)
+      await tx.member.updateMany({
+        where: { id: { not: id } },
+        data: { sisa: { decrement: split } },
+      })
+    }
+
+    await tx.transaction.deleteMany({
+      where: {
+        type: 'income',
+        dicatat: member.name,
+      },
+    })
+
+    await tx.member.delete({ where: { id } })
+  })
+
   publish({ type: 'FINANCE_UPDATED' })
-  return result
+  return member
 }

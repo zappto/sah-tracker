@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Trash2, Loader2 } from 'lucide-react'
 import { useDashboard } from '@/hooks/use-dashboard'
@@ -39,10 +39,10 @@ const formatRupiah = (val: string) => {
 }
 
 export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: MemberFormProps) {
-  const [name, setName] = useState(editMember?.name ?? '')
-  const [avatar, _setAvatar] = useState<string | undefined>(editMember?.avatar)
-  const [setorDisplay, setSetorDisplay] = useState(editMember ? formatRupiah(editMember.setor.toString()) : '')
-  const [sisaDisplay, setSisaDisplay] = useState(editMember ? formatRupiah(editMember.sisa.toString()) : '')
+  const [name, setName] = useState('')
+  const [avatar, _setAvatar] = useState<string | undefined>()
+  const [setorDisplay, setSetorDisplay] = useState('')
+  const [sisaDisplay, setSisaDisplay] = useState('')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const { data } = useDashboard()
@@ -51,6 +51,24 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
   const deleteMember = useDeleteMember()
 
   const isEdit = !!editMember
+
+  useEffect(() => {
+    let mounted = true
+    if (open && mounted) {
+      if (editMember) {
+        setName(editMember.name)
+        setSetorDisplay(formatRupiah(editMember.setor.toString()))
+        setSisaDisplay(formatRupiah(editMember.sisa.toString()))
+        _setAvatar(editMember.avatar)
+      } else {
+        setName('')
+        setSetorDisplay('')
+        setSisaDisplay('')
+        _setAvatar(undefined)
+      }
+    }
+    return () => { mounted = false }
+  }, [open, editMember])
 
   const isDuplicate = data?.members.some(
     (m) => m.name.toLowerCase() === name.trim().toLowerCase() && m.id !== editMember?.id,
@@ -102,10 +120,8 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
     setTimeout(() => onOpenChange(false), 150)
   }
 
-  const formKey = open ? (editMember?.id ?? 'new') : 'closed'
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} key={formKey}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xs">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Edit Anggota' : 'Tambah Anggota'}</DialogTitle>

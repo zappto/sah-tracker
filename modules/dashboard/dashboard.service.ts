@@ -66,7 +66,13 @@ export async function getDashboard(): Promise<IDashboardData> {
   
   // Calculate Tabungan Utama: total income (from all members, etc.) minus total allocated to pockets
   const totalAllocated = pockets.reduce((sum, p) => sum + p.total, 0)
-  const tabunganUtama = summary.income - totalAllocated
+  
+  // Subtract expenses directly from Tabungan Utama
+  const tabunganUtamaSpent = transactions
+    .filter(tx => tx.type === 'expense' && (tx.pocket === 'Tabungan Utama' || tx.pocket === 'Dana Utama'))
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
+  const tabunganUtama = summary.income - totalAllocated - tabunganUtamaSpent
 
   return {
     summary,
