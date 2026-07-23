@@ -1,15 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowUpRight, ArrowDownRight, User, Receipt, ArrowRight } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { ArrowUpRight, ArrowDownRight, User, Tag, Receipt, ArrowRight } from 'lucide-react'
 import { transactions } from '@/lib/data/transactions'
 import { formatRp } from '@/lib/utils'
 
 export function TransactionSection() {
-  const sorted = [...transactions].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  const sorted = [...transactions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   const displayed = sorted.slice(0, 5)
 
   return (
@@ -36,9 +33,10 @@ export function TransactionSection() {
               <div className="flex-1 min-w-0">
                 <p className="text-caption font-medium text-text-primary">{tx.desc}</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <Badge variant="secondary" className="bg-primary-50 text-primary-700 hover:bg-primary-50 border-0 text-caption px-1.5 py-0.5 h-auto">
+                  <span className="inline-flex items-center gap-1 rounded-sm bg-primary-50 px-1.5 py-0.5 text-caption font-medium text-primary-700 leading-none">
+                    <Tag className="h-2.5 w-2.5" />
                     {tx.pocket}
-                  </Badge>
+                  </span>
                   <span className="flex items-center gap-1 text-caption text-text-muted leading-none">
                     <User className="h-2.5 w-2.5" />
                     {tx.dicatat}
