@@ -38,7 +38,7 @@ export async function update(id: string, data: TUpdateMemberInput) {
 export async function remove(id: string) {
   const member = await getById(id)
   
-  const terpakai = member.setor - member.sisa
+  const terpakai = member.setor.toNumber() - member.sisa.toNumber()
   const remainingCount = await prisma.member.count() - 1
 
   await prisma.$transaction(async (tx) => {
