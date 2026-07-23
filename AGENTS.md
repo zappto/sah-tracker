@@ -329,5 +329,36 @@ Mutation (service)
 7. **Keep it simple** — don't overengineer. Not a banking app, not a SaaS.
 8. **Check before build** — sebelum buat UI component, cek dulu di `components/{domain}/` atau `components/ui/`. Jangan duplikasi.
 9. **shadcn untuk UI kecil** — install via `npx shadcn@latest add <component>` jika belum ada. Jangan bikin manual button/badge/card.
+10. **Testing WAJIB** — setiap selesai build fitur HARUS membuat minimal:
+   - **Unit test** (Vitest) di `test/be/vitest/` untuk logic/service/utility
+   - **API/E2E test** (Jest + supertest) di `test/be/jest/` untuk endpoint
+   - **Frontend E2E test** (Playwright) di `test/fe/` untuk user flow
+   - Jalankan `bun run test` sebelum commit untuk memastikan semua lulus
+
+---
+
+# Test Structure
+
+```
+test/
+├── be/
+│   ├── vitest/             # Unit tests (Vitest)
+│   │   ├── vitest.config.ts
+│   │   ├── setup.ts
+│   │   └── utils/format-money.test.ts
+│   └── jest/               # API / E2E tests (Jest + supertest)
+│       ├── jest.config.ts
+│       ├── setup.ts
+│       └── api/health.test.ts
+└── fe/
+    ├── playwright.config.ts  # Actually at root, but tests live here
+    └── dashboard.spec.ts
+```
+
+**Commands:**
+- `bun run test:vitest` — Unit tests
+- `bun run test:jest` — API integration tests
+- `bun run test:e2e` — Frontend E2E (Playwright)
+- `bun run test` — All three sequentially
 
 <!-- END:nextjs-agent-rules -->

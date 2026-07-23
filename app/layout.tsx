@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const fontSans = Inter({
@@ -30,7 +31,21 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${fontSans.variable} antialiased`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster
+          position="top-center"
+          duration={3000}
+          toastOptions={{
+            className: "!rounded-xl !px-4 !py-3 !shadow-none !border",
+            classNames: {
+              success:
+                "!bg-success-bg !border-success/20 !text-success !shadow-none",
+              error: "!bg-danger-bg !border-danger/20 !text-danger !shadow-none",
+            },
+          }}
+        />
+      </body>
     </html>
   );
 }
