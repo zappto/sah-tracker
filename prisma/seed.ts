@@ -10,10 +10,7 @@ async function main() {
   const existingUsers = await prisma.user.findMany()
   if (existingUsers.length === 0) {
     await prisma.user.createMany({
-      data: [
-        { username: 'fajar' },
-        { username: 'zull' },
-      ],
+      data: [{ username: 'fajar' }, { username: 'zull' }],
     })
     console.log('Seeded users: fajar, zull')
   }
@@ -32,19 +29,19 @@ async function main() {
   }
 
   const tabunganUtama = await prisma.pocket.findUnique({
-    where: { name: 'Tabungan Utama' },
+    where: { name: 'Dana Utama' },
   })
 
   if (!tabunganUtama) {
     await prisma.pocket.create({
       data: {
-        name: 'Tabungan Utama',
+        name: 'Dana Utama',
         total: 0,
         spent: 0,
         icon: 'Wallet',
       },
     })
-    console.log('Seeded pocket: Tabungan Utama')
+    console.log('Seeded pocket: Dana Utama')
   }
 }
 
