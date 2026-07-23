@@ -8,6 +8,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { loginSchema, type LoginFormData } from '@/lib/validation'
 import { FloatingInput } from '@/components/ui/floating-input'
+import { Button } from '@/components/ui/button'
 
 export function LoginForm() {
   const router = useRouter()
@@ -74,11 +75,7 @@ export function LoginForm() {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full rounded-xl bg-primary-500 py-3.5 text-base font-medium text-white transition-all hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2"
-      >
+      <Button type="submit" disabled={isSubmitting} className="w-full h-11 text-base">
         {isSubmitting ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -87,7 +84,7 @@ export function LoginForm() {
         ) : (
           'Masuk'
         )}
-      </button>
+      </Button>
     </form>
   )
 }

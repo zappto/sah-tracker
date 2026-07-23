@@ -31,7 +31,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${fontSans.variable} antialiased`}
     >
-      <body>
+      <body className="pb-8">
         {children}
         <Toaster
           position="top-center"

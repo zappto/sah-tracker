@@ -229,3 +229,13 @@
     @apply font-sans;
   }
 }
+
+@keyframes blink-member {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  30% { box-shadow: 0 0 0 3px var(--color-primary-400), 0 0 12px -2px var(--color-primary-300); }
+  60% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.animate-blink-member {
+  animation: blink-member 1.5s ease-out;
+}

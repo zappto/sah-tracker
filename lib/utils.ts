@@ -26,6 +26,14 @@ export function getPastelColor(name: string) {
 
 export const formatRp = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`
 
+export const formatRupiahInput = (value: string) => {
+  const digits = value.replace(/\D/g, '')
+  if (!digits) return ''
+  return Number(digits).toLocaleString('id-ID')
+}
+
+export const unformatRupiah = (value: string) => value.replace(/\D/g, '')
+
 export function smoothScrollTo(el: HTMLElement | null, target: number, duration: number) {
   if (!el) return
   const start = el.scrollLeft
