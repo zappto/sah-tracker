@@ -20,6 +20,16 @@ describe('Transactions API', () => {
   test('POST /api/transactions creates income', async () => {
     const cookies = await login()
 
+    // Create member first
+    await request(BASE)
+      .post('/api/members')
+      .set('Cookie', cookies)
+      .send({
+        name: 'fajar',
+        setor: 0,
+        sisa: 0,
+      })
+
     const res = await request(BASE)
       .post('/api/transactions')
       .set('Cookie', cookies)
@@ -111,6 +121,11 @@ describe('Transactions API', () => {
   test('GET /api/transactions/:id returns single transaction', async () => {
     const cookies = await login()
 
+    await request(BASE)
+      .post('/api/members')
+      .set('Cookie', cookies)
+      .send({ name: 'fajar2', setor: 0, sisa: 0 })
+
     const createRes = await request(BASE)
       .post('/api/transactions')
       .set('Cookie', cookies)
@@ -119,7 +134,7 @@ describe('Transactions API', () => {
         desc: 'Get By ID',
         amount: 10000,
         pocket: 'Tabungan Utama',
-        dicatat: 'fajar',
+        dicatat: 'fajar2',
       })
 
     const id = createRes.body.data.id

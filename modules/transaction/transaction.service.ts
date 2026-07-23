@@ -58,6 +58,14 @@ export async function create(data: TCreateTransactionInput) {
           data: { spent: { increment: data.amount } },
         })
       }
+      
+      const memberCount = await prisma.member.count()
+      if (memberCount > 0) {
+        const splitAmount = Math.floor(data.amount / memberCount)
+        await prisma.member.updateMany({
+          data: { sisa: { decrement: splitAmount } },
+        })
+      }
     }
 
     return tx
