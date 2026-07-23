@@ -1,19 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { loginSchema, type LoginFormData } from '@/lib/validation'
 import { FloatingInput } from '@/components/ui/floating-input'
 import { Button } from '@/components/ui/button'
 
 export function LoginForm() {
-  const router = useRouter()
-  const [showPassword, setShowPassword] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const check = async () => {
+      const { isLoggedIn } = await import('@/lib/auth')
+      if (isLoggedIn()) {
+        window.location.assign('/admin/dashboard')
+      }
+    }
+    check()
+  }, [])
 
   const {
     register,
@@ -22,52 +29,31 @@ export function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: { username: '' },
   })
 
-  const emailValue = useWatch({ control, name: 'email' })
-  const passwordValue = useWatch({ control, name: 'password' })
+  const usernameValue = useWatch({ control, name: 'username' })
 
   const onSubmit = async () => {
     setApiError(null)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await new Promise((resolve) => setTimeout(resolve, 800))
+    const { login } = await import('@/lib/auth')
+    login(usernameValue || 'admin')
     toast.success('Berhasil masuk')
-    router.push('/admin/dashboard')
+    window.location.assign('/admin/dashboard')
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-      <div className="relative">
-        <FloatingInput
-          id="email"
-          label="Email"
-          type="email"
-          autoComplete="email"
-          value={emailValue}
-          error={errors.email?.message}
-          {...register('email')}
-        />
-      </div>
-
-      <div className="relative">
-        <FloatingInput
-          id="password"
-          label="Password"
-          type={showPassword ? 'text' : 'password'}
-          autoComplete="current-password"
-          value={passwordValue}
-          error={errors.password?.message}
-          {...register('password')}
-          className="pr-11"
-        />
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-text-muted hover:text-text-secondary transition-colors"
-          aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
-        >
-          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-        </button>
-      </div>
+      <FloatingInput
+        id="username"
+        label="Username"
+        type="text"
+        autoComplete="username"
+        value={usernameValue}
+        error={errors.username?.message}
+        {...register('username')}
+      />
 
       {apiError && (
         <div className="rounded-xl bg-danger-bg border border-danger/20 px-4 py-3" role="alert">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Trash2 } from 'lucide-react'
 import { useDashboard } from '@/lib/hooks/use-dashboard'
 import { FloatingInput } from '@/components/ui/floating-input'
@@ -41,21 +41,6 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
   const { data, setData } = useDashboard()
 
   const isEdit = !!editMember
-
-  useEffect(() => {
-    if (!open) return
-    if (editMember) {
-      setName(editMember.name)
-      setAvatar(editMember.avatar)
-      setSetorDisplay(editMember.setor ? `Rp ${editMember.setor.toLocaleString('id-ID')}` : '')
-      setSisaDisplay(editMember.sisa ? `Rp ${editMember.sisa.toLocaleString('id-ID')}` : '')
-    } else {
-      setName('')
-      setAvatar(undefined)
-      setSetorDisplay('')
-      setSisaDisplay('')
-    }
-  }, [open, editMember])
 
   const isDuplicate = data.members.some(
     (m) => m.name.toLowerCase() === name.trim().toLowerCase() && m.name !== editMember?.name,
@@ -114,8 +99,10 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
     onOpenChange(false)
   }
 
+  const formKey = editMember?.name ?? 'new'
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} key={formKey}>
       <DialogContent className="max-w-xs">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Edit Anggota' : 'Tambah Anggota'}</DialogTitle>

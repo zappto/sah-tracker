@@ -22,6 +22,7 @@ export interface ITransaction {
   createdAt: string
   pocket: string
   dicatat: string
+  image?: string
 }
 
 export interface ISummary {

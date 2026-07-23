@@ -86,27 +86,25 @@ function MemberCard({ member, isPinned, onPin, blink, onEdit }: { member: IMembe
   const terpakai = member.setor - member.sisa
   const pct = (terpakai / member.setor) * 100
 
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => onEdit?.(member)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') onEdit?.(member)
-      }}
-      className={`rounded-sm bg-white border border-border-subtle px-4 py-3 relative cursor-pointer active:scale-[0.98] transition-transform ${blink ? 'animate-blink-member' : ''}`}
-      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          onPin()
-        }}
-        className="absolute top-0 right-0 flex items-center justify-center w-10 h-10"
-        style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-        aria-label={isPinned ? 'Unpin member' : 'Pin member'}>
-        <Star className={`h-4 w-4 ${isPinned ? 'fill-primary-500 text-primary-500' : 'text-text-muted'}`} />
-      </button>
+  const inner = (
+    <>
+      {onEdit ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onPin()
+          }}
+          className="absolute top-0 right-0 flex items-center justify-center w-10 h-10"
+          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          aria-label={isPinned ? 'Unpin member' : 'Pin member'}>
+          <Star className={`h-4 w-4 ${isPinned ? 'fill-primary-500 text-primary-500' : 'text-text-muted'}`} />
+        </button>
+      ) : isPinned && (
+        <div className="absolute top-0 right-0 flex items-center justify-center w-10 h-10">
+          <Star className="h-4 w-4 fill-primary-500 text-primary-500" />
+        </div>
+      )}
       <div className="flex items-center gap-3">
         {member.avatar ? (
           <img src={member.avatar} alt={member.name} className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border-subtle" />
@@ -132,6 +130,23 @@ function MemberCard({ member, isPinned, onPin, blink, onEdit }: { member: IMembe
       <div className="mt-2 h-1 w-full rounded-sm bg-slate-200 overflow-hidden">
         <div className="h-full rounded-sm bg-danger transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
       </div>
+    </>
+  )
+
+  if (!onEdit) return <div className={`rounded-sm bg-white border border-border-subtle px-4 py-3 relative ${blink ? 'animate-blink-member' : ''}`}>{inner}</div>
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onEdit(member)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onEdit(member)
+      }}
+      className={`rounded-sm bg-white border border-border-subtle px-4 py-3 relative cursor-pointer active:scale-[0.98] transition-transform ${blink ? 'animate-blink-member' : ''}`}
+      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+    >
+      {inner}
     </div>
   )
 }
