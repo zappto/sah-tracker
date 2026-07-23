@@ -6,6 +6,10 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
+const AMOUNT = 1_100_000
+const MEMBER_NAMES = ['fajar', 'zull', 'nafan', 'alif', 'vicar', 'zovan', 'sapto', 'fatih']
+const POCKET_UTAMA = 'Dana Utama'
+
 async function main() {
   const existingUsers = await prisma.user.findMany()
   if (existingUsers.length === 0) {
@@ -17,31 +21,42 @@ async function main() {
 
   const existingMembers = await prisma.member.findMany()
   if (existingMembers.length === 0) {
-    const memberNames = ['fajar', 'zull', 'nafan', 'alif', 'vicar', 'zovan', 'sapto', 'fatih']
     await prisma.member.createMany({
-      data: memberNames.map((name) => ({
+      data: MEMBER_NAMES.map((name) => ({
         name,
-        setor: 1100000,
-        sisa: 1100000,
+        setor: AMOUNT,
+        sisa: AMOUNT,
       })),
     })
-    console.log(`Seeded ${memberNames.length} members`)
+    console.log(`Seeded ${MEMBER_NAMES.length} members (Rp${(AMOUNT / 1_000_000).toLocaleString('id-ID')}.000 each)`)
   }
 
-  const tabunganUtama = await prisma.pocket.findUnique({
-    where: { name: 'Dana Utama' },
-  })
+  const existingTx = await prisma.transaction.findFirst()
+  if (!existingTx) {
+    await prisma.transaction.createMany({
+      data: MEMBER_NAMES.map((name) => ({
+        type: 'income',
+        desc: `Setor ${name}`,
+        amount: AMOUNT,
+        time: '00.00 · Awal',
+        pocket: POCKET_UTAMA,
+        dicatat: name,
+      })),
+    })
+    console.log(`Seeded ${MEMBER_NAMES.length} initial income transactions`)
+  }
 
-  if (!tabunganUtama) {
+  const utama = await prisma.pocket.findUnique({ where: { name: POCKET_UTAMA } })
+  if (!utama) {
     await prisma.pocket.create({
       data: {
-        name: 'Dana Utama',
-        total: 0,
+        name: POCKET_UTAMA,
+        total: AMOUNT * MEMBER_NAMES.length,
         spent: 0,
         icon: 'Wallet',
       },
     })
-    console.log('Seeded pocket: Dana Utama')
+    console.log(`Seeded pocket: ${POCKET_UTAMA} (Rp${((AMOUNT * MEMBER_NAMES.length) / 1_000_000).toLocaleString('id-ID')}.000)`)
   }
 }
 
