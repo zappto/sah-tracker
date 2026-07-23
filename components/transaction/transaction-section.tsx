@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { ArrowUpRight, ArrowDownRight, User, Tag, Receipt, ArrowRight } from 'lucide-react'
 import { formatRp } from '@/lib/utils'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import { useDashboard } from '@/hooks/use-dashboard'
 
 export function TransactionSection() {
-  const { data } = useDashboard()
+  const { data, isLoading } = useDashboard()
+  if (!data) return null
   const sorted = [...data.transactions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   const displayed = sorted.slice(0, 5)
 

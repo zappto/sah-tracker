@@ -1,6 +1,7 @@
 export type TTransactionType = 'income' | 'expense'
 
 export interface IMember {
+  id: string
   name: string
   setor: number
   sisa: number
@@ -8,6 +9,7 @@ export interface IMember {
 }
 
 export interface IPocketData {
+  id: string
   name: string
   total: number
   spent: number
@@ -15,6 +17,7 @@ export interface IPocketData {
 }
 
 export interface ITransaction {
+  id: string
   type: TTransactionType
   desc: string
   amount: number

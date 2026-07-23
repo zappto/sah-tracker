@@ -3,7 +3,7 @@
 import { useState, type ComponentType } from 'react'
 import { Wallet, Utensils, Cookie, Car, Coffee, Navigation, Gamepad2, Smartphone, Layers, ChevronDown, Plus } from 'lucide-react'
 import { formatRp } from '@/lib/utils'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import { useDashboard } from '@/hooks/use-dashboard'
 import type { IPocketData } from '@/lib/types/dashboard'
 
 const iconMap: Record<string, ComponentType<{ className?: string }>> = {
@@ -20,13 +20,15 @@ interface PocketSectionProps {
 }
 
 export function PocketSection({ onAddPocket, onEditPocket }: PocketSectionProps) {
-  const { data } = useDashboard()
+  const { data, isLoading } = useDashboard()
   const isReadOnly = !onAddPocket && !onEditPocket
-  const utama = data.pockets.find((p) => p.name === 'Dana Utama')
-  const regularPockets = data.pockets.filter((p) => p.name !== 'Dana Utama')
+  const utama = data?.pockets.find((p) => p.name === 'Dana Utama')
+  const regularPockets = data ? data.pockets.filter((p) => p.name !== 'Dana Utama') : []
   const [showAll, setShowAll] = useState(false)
   const sliced = showAll ? regularPockets : regularPockets.slice(0, 2)
   const displayPockets = utama ? [utama, ...sliced] : sliced
+  if (!data) return null
+
   const items: ({ type: 'pocket'; data: IPocketData } | { type: 'add' })[] = []
   if (!isReadOnly) {
     displayPockets.forEach((p, i) => {

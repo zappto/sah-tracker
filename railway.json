@@ -1,0 +1,11 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "prisma generate && prisma migrate deploy && prisma db seed && npx next build"
+  },
+  "deploy": {
+    "startCommand": "npx next start",
+    "healthcheckPath": "/",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

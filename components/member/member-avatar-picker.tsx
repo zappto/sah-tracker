@@ -1,7 +1,8 @@
 'use client'
 
+import Image from 'next/image'
 import { cn, getPastelColor } from '@/lib/utils'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import { useDashboard } from '@/hooks/use-dashboard'
 import { Users } from 'lucide-react'
 
 interface MemberAvatarPickerProps {
@@ -10,9 +11,9 @@ interface MemberAvatarPickerProps {
 }
 
 export function MemberAvatarPicker({ value, onChange }: MemberAvatarPickerProps) {
-  const { data } = useDashboard()
+  const { data, isLoading } = useDashboard()
 
-  if (data.members.length === 0) {
+  if (!data || data.members.length === 0) {
     return (
       <div className="rounded-lg border border-border-subtle px-4 py-6 flex flex-col items-center gap-2 text-text-muted">
         <Users className="h-6 w-6" />
@@ -25,7 +26,7 @@ export function MemberAvatarPicker({ value, onChange }: MemberAvatarPickerProps)
     <div>
       <p className="text-sm font-medium text-text-primary mb-2">Member</p>
       <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
-        {data.members.map((member) => {
+        {data?.members.map((member) => {
           const selected = value === member.name
           const color = getPastelColor(member.name)
           return (
@@ -45,7 +46,7 @@ export function MemberAvatarPicker({ value, onChange }: MemberAvatarPickerProps)
                 member.avatar ? '' : `${color.bg} ${color.text}`,
               )}>
                 {member.avatar ? (
-                  <img src={member.avatar} alt={member.name} className="h-full w-full rounded-full object-cover" />
+                  <Image src={member.avatar} alt={member.name} width={48} height={48} className="h-full w-full rounded-full object-cover" unoptimized />
                 ) : (
                   <span className="text-sm font-semibold">{member.name[0]}</span>
                 )}

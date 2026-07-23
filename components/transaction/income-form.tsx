@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import { Loader2 } from 'lucide-react'
+import { useDashboard } from '@/hooks/use-dashboard'
+import { useCreateTransaction } from '@/hooks/use-mutations'
 import { FloatingInput } from '@/components/ui/floating-input'
-import { Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -12,7 +13,7 @@ import {
   SelectItem,
 } from '@/components/ui/select'
 import { getPastelColor } from '@/lib/utils'
-import type { ITransaction } from '@/lib/types/dashboard'
+import { Users } from 'lucide-react'
 
 const TABUNGAN_UTAMA = 'Dana Utama'
 
@@ -25,14 +26,15 @@ export function IncomeForm({ onSuccess }: IncomeFormProps) {
   const [amountDisplay, setAmountDisplay] = useState('')
   const [desc, setDesc] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const { data, setData } = useDashboard()
+  const { data } = useDashboard()
+  const createTx = useCreateTransaction()
 
   const formatRupiah = (val: string) => {
     const digits = val.replace(/\D/g, '')
     return digits ? `Rp ${Number(digits).toLocaleString('id-ID')}` : ''
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e: Record<string, string> = {}
     if (!member) e.member = 'Pilih member'
     const amount = parseInt(amountDisplay.replace(/\D/g, ''), 10) || 0
@@ -40,38 +42,12 @@ export function IncomeForm({ onSuccess }: IncomeFormProps) {
     setErrors(e)
     if (Object.keys(e).length > 0) return
 
-    const now = new Date()
-    const createdAt = now.toISOString()
-    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-
-    const updatedMembers = data.members.map((m) =>
-      m.name === member ? { ...m, setor: m.setor + amount, sisa: m.sisa + amount } : m,
-    )
-
-    const updatedPockets = data.pockets.map((p) =>
-      p.name === TABUNGAN_UTAMA ? { ...p, total: p.total + amount } : p,
-    )
-
-    const newTx: ITransaction = {
+    await createTx.mutateAsync({
       type: 'income',
       desc: desc.trim() || `Setor ${member}`,
       amount,
-      time: `${timeStr} · Hari ini`,
-      createdAt,
       pocket: TABUNGAN_UTAMA,
       dicatat: member,
-    }
-
-    setData({
-      ...data,
-      summary: {
-        total: data.summary.total + amount,
-        income: data.summary.income + amount,
-        expense: data.summary.expense,
-      },
-      members: updatedMembers,
-      pockets: updatedPockets,
-      transactions: [newTx, ...data.transactions],
     })
 
     onSuccess?.()
@@ -84,10 +60,10 @@ export function IncomeForm({ onSuccess }: IncomeFormProps) {
     >
       <div>
         <p className="text-sm font-medium text-text-primary mb-2">Member</p>
-        <Select value={member || null} onValueChange={(v) => { setMember(v ?? ''); setErrors((prev) => { const { member: _, ...r } = prev; return r }) }}>
+        <Select value={member || null} onValueChange={(v) => { setMember(v ?? ''); setErrors((prev) => { const r = { ...prev }; delete r.member; return r }) }}>
           <SelectTrigger className={errors.member ? 'border-danger' : ''}>
             {(() => {
-              const sel = data.members.find((m) => m.name === member)
+              const sel = data?.members.find((m) => m.name === member)
               return sel ? (
                 <>
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${getPastelColor(sel.name).bg} ${getPastelColor(sel.name).text}`}>
@@ -106,10 +82,10 @@ export function IncomeForm({ onSuccess }: IncomeFormProps) {
             })()}
           </SelectTrigger>
           <SelectContent>
-            {data.members.map((m) => {
+            {data?.members.map((m) => {
               const color = getPastelColor(m.name)
               return (
-                <SelectItem key={m.name} value={m.name} className="py-3">
+                <SelectItem key={m.id} value={m.name} className="py-3">
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${color.bg} ${color.text}`}>
                     {m.name[0]}
                   </div>
@@ -131,7 +107,7 @@ export function IncomeForm({ onSuccess }: IncomeFormProps) {
         type="text"
         inputMode="numeric"
         value={amountDisplay}
-        onChange={(e) => { setAmountDisplay(formatRupiah(e.target.value)); setErrors((prev) => { const { amount, ...r } = prev; return r }) }}
+        onChange={(e) => { setAmountDisplay(formatRupiah(e.target.value)); setErrors((prev) => { const r = { ...prev }; delete r.amount; return r }) }}
         error={errors.amount}
       />
 
@@ -142,8 +118,12 @@ export function IncomeForm({ onSuccess }: IncomeFormProps) {
         onChange={(e) => setDesc(e.target.value)}
       />
 
-      <Button type="submit" className="w-full h-11 text-base">
-        Tambah Uang
+      <Button type="submit" disabled={createTx.isPending} className="w-full h-11 text-base">
+        {createTx.isPending ? (
+          <><Loader2 className="h-5 w-5 animate-spin" /> Menyimpan...</>
+        ) : (
+          'Tambah Uang'
+        )}
       </Button>
     </form>
   )

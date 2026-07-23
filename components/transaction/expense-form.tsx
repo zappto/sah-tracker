@@ -1,13 +1,15 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import Image from 'next/image'
+import { Loader2 } from 'lucide-react'
+import { useDashboard } from '@/hooks/use-dashboard'
+import { useCreateTransaction } from '@/hooks/use-mutations'
 import { FloatingInput } from '@/components/ui/floating-input'
 import { ImagePlus, PiggyBank, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import { formatRp } from '@/lib/utils'
-import type { ITransaction } from '@/lib/types/dashboard'
 
 const TABUNGAN_UTAMA = 'Dana Utama'
 
@@ -22,9 +24,8 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
   const [image, setImage] = useState<string | undefined>()
   const [errors, setErrors] = useState<Record<string, string>>({})
   const fileRef = useRef<HTMLInputElement>(null)
-  const { data, setData } = useDashboard()
-
-  const selectedPocket = data.pockets.find((p) => p.name === pocket)
+  const { data } = useDashboard()
+  const createTx = useCreateTransaction()
 
   const formatRupiah = (val: string) => {
     const digits = val.replace(/\D/g, '')
@@ -34,7 +35,7 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const img = new Image()
+    const img = new window.Image()
     img.onload = () => {
       const MAX = 120
       let w = img.width,
@@ -61,39 +62,19 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
     e.target.value = ''
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e: Record<string, string> = {}
     const amount = parseInt(amountDisplay.replace(/\D/g, ''), 10) || 0
     if (amount < 1) e.amount = 'Masukkan nominal'
     setErrors(e)
     if (Object.keys(e).length > 0) return
 
-    const now = new Date()
-    const createdAt = now.toISOString()
-    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-
-    const updatedPockets = data.pockets.map((p) => (p.name === pocket ? { ...p, spent: p.spent + amount } : p))
-
-    const newTx: ITransaction = {
+    await createTx.mutateAsync({
       type: 'expense',
       desc: desc.trim() || `Belanja ${pocket}`,
       amount,
-      time: `${timeStr} · Hari ini`,
-      createdAt,
       pocket,
-      dicatat: '',
       image,
-    }
-
-    setData({
-      ...data,
-      summary: {
-        total: data.summary.total - amount,
-        income: data.summary.income,
-        expense: data.summary.expense + amount,
-      },
-      pockets: updatedPockets,
-      transactions: [newTx, ...data.transactions],
     })
 
     onSuccess?.()
@@ -113,13 +94,14 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
           onValueChange={(v) => {
             setPocket(v ?? TABUNGAN_UTAMA)
             setErrors((prev) => {
-              const { pocket: _, ...r } = prev
+              const r = { ...prev }
+              delete r.pocket
               return r
             })
           }}>
           <SelectTrigger className={errors.pocket ? 'border-danger' : ''}>
             {(() => {
-              const sel = data.pockets.find((p) => p.name === pocket)
+              const sel = data?.pockets.find((p) => p.name === pocket)
               return sel ? (
                 <>
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-bg text-primary">
@@ -139,10 +121,10 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
             })()}
           </SelectTrigger>
           <SelectContent>
-            {data.pockets.map((p) => {
+            {data?.pockets.map((p) => {
               const remaining = p.total - p.spent
               return (
-                <SelectItem key={p.name} value={p.name} className="py-3">
+                <SelectItem key={p.id} value={p.name} className="py-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-bg text-primary">
                     <PiggyBank className="h-4 w-4" />
                   </div>
@@ -171,7 +153,8 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
         onChange={(e) => {
           setAmountDisplay(formatRupiah(e.target.value))
           setErrors((prev) => {
-            const { amount, ...r } = prev
+            const r = { ...prev }
+            delete r.amount
             return r
           })
         }}
@@ -185,7 +168,7 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
         <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
         {image ? (
           <div className="relative w-full rounded-sm border border-border-input bg-white p-3">
-            <img src={image} alt="Bukti belanja" className="h-24 w-full rounded-sm object-contain" />
+            <Image src={image} alt="Bukti belanja" width={0} height={0} sizes="100vw" className="h-24 w-full rounded-sm object-contain" unoptimized />
             <button
               type="button"
               onClick={() => setImage(undefined)}
@@ -204,8 +187,12 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
         )}
       </div>
 
-      <Button type="submit" className="w-full h-11 text-base">
-        Belanja
+      <Button type="submit" disabled={createTx.isPending} className="w-full h-11 text-base">
+        {createTx.isPending ? (
+          <><Loader2 className="h-5 w-5 animate-spin" /> Menyimpan...</>
+        ) : (
+          'Belanja'
+        )}
       </Button>
     </form>
   )

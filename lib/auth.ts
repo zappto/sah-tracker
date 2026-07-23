@@ -1,15 +1,33 @@
-const AUTH_KEY = 'st-auth'
+export async function login(username: string): Promise<{ id: string; username: string }> {
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username }),
+  })
 
-export const login = (username: string): void => {
-  localStorage.setItem(AUTH_KEY, username)
+  const json = await res.json()
+  if (!res.ok) {
+    throw new Error(json.error?.message ?? 'Gagal login')
+  }
+  return json.data
 }
 
-export const isLoggedIn = (): boolean => {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem(AUTH_KEY) !== null
+export async function isLoggedIn(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth/me')
+    return res.ok
+  } catch {
+    return false
+  }
 }
 
-export const getUsername = (): string | null => {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem(AUTH_KEY)
+export async function getUsername(): Promise<string | null> {
+  try {
+    const res = await fetch('/api/auth/me')
+    if (!res.ok) return null
+    const json = await res.json()
+    return json.data?.username ?? null
+  } catch {
+    return null
+  }
 }

@@ -1,20 +1,21 @@
 'use client'
 
 import { useRef, useState, useCallback } from 'react'
-import { Star, Banknote, ArrowUpRight, CircleDollarSign, Users } from 'lucide-react'
+import Image from 'next/image'
+import { Star, Banknote, ArrowUpRight, CircleDollarSign, Users, Plus } from 'lucide-react'
 import { formatRp, getPastelColor, smoothScrollTo } from '@/lib/utils'
-import { useLocalStorage } from '@/lib/hooks/use-local-storage'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import { useDashboard } from '@/hooks/use-dashboard'
 import type { IMember } from '@/lib/types/dashboard'
 
 interface MemberSectionProps {
   blinkMember?: string | null
   onEditMember?: (member: IMember) => void
+  onAddMember?: () => void
 }
 
-export function MemberSection({ blinkMember, onEditMember }: MemberSectionProps) {
-  const { data } = useDashboard()
-  const [pinned, setPinned] = useLocalStorage<string[]>('st-pinned-members', [])
+export function MemberSection({ blinkMember, onEditMember, onAddMember }: MemberSectionProps) {
+  const { data, isLoading } = useDashboard()
+  const [pinned, setPinned] = useState<string[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const [slide, setSlide] = useState(0)
 
@@ -35,12 +36,12 @@ export function MemberSection({ blinkMember, onEditMember }: MemberSectionProps)
     goToSlide(0, true)
   }
 
-  const sorted = [...data.members].sort((a, b) => {
+  const sorted = data ? [...data.members].sort((a, b) => {
     const aP = pinned.includes(a.name) ? 0 : 1
     const bP = pinned.includes(b.name) ? 0 : 1
     if (aP !== bP) return aP - bP
     return data.members.indexOf(a) - data.members.indexOf(b)
-  })
+  }) : []
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current
@@ -55,16 +56,28 @@ export function MemberSection({ blinkMember, onEditMember }: MemberSectionProps)
         <Users className="h-4 w-4 text-primary-500" />
         Member
       </h2>
-      <div ref={scrollRef} onScroll={handleScroll} className="overflow-x-auto snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex gap-2">
-        {sorted.map((member) => {
-          const isPinned = pinned.includes(member.name)
-          return (
-            <div key={member.name} className="w-full shrink-0 snap-start">
-              <MemberCard member={member} isPinned={isPinned} onPin={() => togglePin(member.name)} blink={blinkMember === member.name} onEdit={onEditMember} />
-            </div>
-          )
-        })}
-      </div>
+      {sorted.length === 0 && onAddMember ? (
+        <button
+          type="button"
+          onClick={onAddMember}
+          className="flex flex-col items-center justify-center gap-2 rounded-sm border-2 border-dashed border-border-subtle bg-white px-3 py-6 w-full active:scale-[0.98] transition-transform text-text-muted hover:text-primary-500 hover:border-primary-300"
+          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+        >
+          <Plus className="h-8 w-8 text-primary-400" />
+          <span className="text-sm font-medium">Tambah Anggota</span>
+        </button>
+      ) : (
+        <div ref={scrollRef} onScroll={handleScroll} className="overflow-x-auto snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex gap-2">
+          {sorted.map((member) => {
+            const isPinned = pinned.includes(member.name)
+            return (
+              <div key={member.name} className="w-full shrink-0 snap-start">
+                <MemberCard member={member} isPinned={isPinned} onPin={() => togglePin(member.name)} blink={blinkMember === member.name} onEdit={onEditMember} />
+              </div>
+            )
+          })}
+        </div>
+      )}
       {sorted.length > 1 && (
         <div className="flex items-center justify-center gap-1.5 mt-2">
           {sorted.map((_, i) => (
@@ -100,14 +113,16 @@ function MemberCard({ member, isPinned, onPin, blink, onEdit }: { member: IMembe
           aria-label={isPinned ? 'Unpin member' : 'Pin member'}>
           <Star className={`h-4 w-4 ${isPinned ? 'fill-primary-500 text-primary-500' : 'text-text-muted'}`} />
         </button>
-      ) : isPinned && (
-        <div className="absolute top-0 right-0 flex items-center justify-center w-10 h-10">
-          <Star className="h-4 w-4 fill-primary-500 text-primary-500" />
-        </div>
+      ) : (
+        isPinned && (
+          <div className="absolute top-0 right-0 flex items-center justify-center w-10 h-10">
+            <Star className="h-4 w-4 fill-primary-500 text-primary-500" />
+          </div>
+        )
       )}
       <div className="flex items-center gap-3">
         {member.avatar ? (
-          <img src={member.avatar} alt={member.name} className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border-subtle" />
+          <Image src={member.avatar} alt={member.name} width={40} height={40} className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border-subtle" unoptimized />
         ) : (
           <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${color.bg} ${color.text} text-sm font-semibold`}>{member.name[0]}</div>
         )}
@@ -144,8 +159,7 @@ function MemberCard({ member, isPinned, onPin, blink, onEdit }: { member: IMembe
         if (e.key === 'Enter') onEdit(member)
       }}
       className={`rounded-sm bg-white border border-border-subtle px-4 py-3 relative cursor-pointer active:scale-[0.98] transition-transform ${blink ? 'animate-blink-member' : ''}`}
-      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-    >
+      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}>
       {inner}
     </div>
   )

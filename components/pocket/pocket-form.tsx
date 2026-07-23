@@ -1,14 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Trash2 } from 'lucide-react'
 import { pocketSchema, type PocketFormData } from '@/lib/validation'
 import { FloatingInput } from '@/components/ui/floating-input'
 import { IconPicker } from '@/components/pocket/icon-picker'
 import { Button } from '@/components/ui/button'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import { useDashboard } from '@/hooks/use-dashboard'
+import { useCreatePocket, useUpdatePocket, useDeletePocket } from '@/hooks/use-mutations'
 import { formatRp } from '@/lib/utils'
 import {
   AlertDialog,
@@ -29,15 +30,17 @@ interface PocketFormProps {
 }
 
 export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
-  const [budgetDisplay, setBudgetDisplay] = useState('')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [saldoError, setSaldoError] = useState('')
-  const { data, setData } = useDashboard()
+  const { data } = useDashboard()
+  const createPocket = useCreatePocket()
+  const updatePocket = useUpdatePocket()
+  const deletePocket = useDeletePocket()
 
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     getValues,
     reset,
@@ -47,28 +50,25 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
     defaultValues: { name: '', budget: '', icon: 'Wallet' },
   })
 
-  const nameValue = watch('name')
-  const iconValue = watch('icon')
+  const nameValue = useWatch({ control, name: 'name' })
+  const iconValue = useWatch({ control, name: 'icon' })
+  const rawBudgetValue = useWatch({ control, name: 'budget' })
+  const budgetDisplay = rawBudgetValue ? `Rp ${Number(rawBudgetValue).toLocaleString('id-ID')}` : ''
 
   useEffect(() => {
     if (!editPocket) {
       reset({ name: '', budget: '', icon: 'Wallet' })
-      setBudgetDisplay('')
       return
     }
-    const rawBudget = editPocket.total.toString()
     reset({
       name: editPocket.name,
-      budget: rawBudget,
+      budget: editPocket.total.toString(),
       icon: editPocket.icon,
     })
-    setBudgetDisplay(rawBudget && rawBudget !== '0' ? `Rp ${Number(rawBudget).toLocaleString('id-ID')}` : '')
   }, [editPocket, reset])
 
   const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '')
-    setValue('budget', raw)
-    setBudgetDisplay(raw ? `Rp ${Number(raw).toLocaleString('id-ID')}` : '')
+    setValue('budget', e.target.value.replace(/\D/g, ''))
   }
 
   const TABUNGAN_UTAMA = 'Dana Utama'
@@ -80,32 +80,32 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
     const icon = getValues('icon') || 'Wallet'
 
     if (editPocket) {
-      const updated = data.pockets.map((p) => (p.name === editPocket.name ? { ...p, name, total: rawBudget, icon } : p))
-      setData({ ...data, pockets: updated })
+      await updatePocket.mutateAsync({
+        id: editPocket.id,
+        data: { name, total: rawBudget, icon },
+      })
     } else {
-      const utama = data.pockets.find((p) => p.name === TABUNGAN_UTAMA)
-      if (!utama || utama.total - utama.spent < rawBudget) {
+      const utama = data?.pockets.find((p) => p.name === TABUNGAN_UTAMA)
+      if (rawBudget > 0 && (!utama || utama.total - utama.spent < rawBudget)) {
         setSaldoError('Saldo Tabungan Utama tidak mencukupi')
         return
       }
       setSaldoError('')
 
-      const updatedPockets = data.pockets.map((p) => (p.name === TABUNGAN_UTAMA ? { ...p, spent: p.spent + rawBudget } : p))
-      const newPocket: IPocketData = { name, total: rawBudget, spent: 0, icon }
-      setData({ ...data, pockets: [newPocket, ...updatedPockets] })
+      await createPocket.mutateAsync({ name, total: rawBudget, icon })
     }
     onSuccess?.()
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!editPocket || isTabunganUtama) return
-    const filtered = data.pockets.filter((p) => p.name !== editPocket.name)
-    setData({ ...data, pockets: filtered })
+    await deletePocket.mutateAsync(editPocket.id)
     setDeleteOpen(false)
     onSuccess?.()
   }
 
   const isEdit = !!editPocket
+  const isPending = createPocket.isPending || updatePocket.isPending || deletePocket.isPending
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
@@ -123,7 +123,7 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
         }}
       />
       {(() => {
-        const utama = data.pockets.find((p) => p.name === TABUNGAN_UTAMA)
+        const utama = data?.pockets.find((p) => p.name === TABUNGAN_UTAMA)
         if (!utama || isEdit) return null
         const saldo = utama.total - utama.spent
         return (
@@ -135,8 +135,8 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
       })()}
       <IconPicker value={iconValue ?? 'Wallet'} onChange={(name) => setValue('icon', name)} />
 
-      <Button type="submit" disabled={isSubmitting} className="w-full h-11 text-base">
-        {isSubmitting ? (
+      <Button type="submit" disabled={isSubmitting || isPending} className="w-full h-11 text-base">
+        {isPending ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin" />
             Menyimpan...
@@ -163,8 +163,8 @@ export function PocketForm({ onSuccess, editPocket }: PocketFormProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Batal</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-danger text-white hover:bg-danger/90">
-                Ya, Hapus
+              <AlertDialogAction onClick={handleDelete} className="bg-danger text-white hover:bg-danger/90" disabled={deletePocket.isPending}>
+                {deletePocket.isPending ? 'Menghapus...' : 'Ya, Hapus'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

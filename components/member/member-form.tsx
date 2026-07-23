@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Trash2 } from 'lucide-react'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
+import { Trash2, Loader2 } from 'lucide-react'
+import { useDashboard } from '@/hooks/use-dashboard'
+import { useCreateMember, useUpdateMember, useDeleteMember } from '@/hooks/use-mutations'
 import { FloatingInput } from '@/components/ui/floating-input'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,17 +35,32 @@ interface MemberFormProps {
 
 export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: MemberFormProps) {
   const [name, setName] = useState('')
-  const [avatar, setAvatar] = useState<string | undefined>()
+  const [avatar, _setAvatar] = useState<string | undefined>()
   const [setorDisplay, setSetorDisplay] = useState('')
   const [sisaDisplay, setSisaDisplay] = useState('')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
-  const { data, setData } = useDashboard()
+  const { data } = useDashboard()
+  const createMember = useCreateMember()
+  const updateMember = useUpdateMember()
+  const deleteMember = useDeleteMember()
 
   const isEdit = !!editMember
 
-  const isDuplicate = data.members.some(
-    (m) => m.name.toLowerCase() === name.trim().toLowerCase() && m.name !== editMember?.name,
+  useEffect(() => {
+    if (editMember) {
+      setName(editMember.name)
+      setSetorDisplay(formatRupiah(editMember.setor.toString()))
+      setSisaDisplay(formatRupiah(editMember.sisa.toString()))
+    } else {
+      setName('')
+      setSetorDisplay('')
+      setSisaDisplay('')
+    }
+  }, [editMember])
+
+  const isDuplicate = data?.members.some(
+    (m) => m.name.toLowerCase() === name.trim().toLowerCase() && m.id !== editMember?.id,
   )
 
   const formatRupiah = (val: string) => {
@@ -54,7 +71,7 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const img = new Image()
+    const img = new window.Image()
     img.onload = () => {
       const MAX = 120
       let w = img.width, h = img.height
@@ -64,7 +81,7 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
       c.width = w; c.height = h
       const ctx = c.getContext('2d')!
       ctx.drawImage(img, 0, 0, w, h)
-      setAvatar(c.toDataURL('image/jpeg', 0.5))
+      _setAvatar(c.toDataURL('image/jpeg', 0.5))
     }
     const reader = new FileReader()
     reader.onload = (ev) => { img.src = ev.target?.result as string }
@@ -72,34 +89,32 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
     e.target.value = ''
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const trimmed = name.trim()
     if (!trimmed || isDuplicate) return
-    const setor = parseInt(setorDisplay.replace(/\D/g, ''), 10) || 0
-    const sisa = parseInt(sisaDisplay.replace(/\D/g, ''), 10) || 0
+    const rawSetor = parseInt(setorDisplay.replace(/\D/g, ''), 10) || 0
+    const rawSisa = parseInt(sisaDisplay.replace(/\D/g, ''), 10) || 0
 
-    if (isEdit) {
-      const updated = data.members.map((m) =>
-        m.name === editMember!.name ? { ...m, name: trimmed, setor, sisa, avatar } : m,
-      )
-      setData({ ...data, members: updated })
+    if (isEdit && editMember) {
+      await updateMember.mutateAsync({
+        id: editMember.id,
+        data: { name: trimmed, setor: rawSetor, sisa: rawSisa },
+      })
     } else {
-      const newMember: IMember = { name: trimmed, setor, sisa, avatar }
-      setData({ ...data, members: [newMember, ...data.members] })
+      await createMember.mutateAsync({ name: trimmed, setor: rawSetor, sisa: rawSisa })
       onMemberAdded?.(trimmed)
     }
     onOpenChange(false)
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!editMember) return
-    const filtered = data.members.filter((m) => m.name !== editMember.name)
-    setData({ ...data, members: filtered })
+    await deleteMember.mutateAsync(editMember.id)
     setDeleteOpen(false)
     onOpenChange(false)
   }
 
-  const formKey = editMember?.name ?? 'new'
+  const formKey = editMember?.id ?? 'new'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} key={formKey}>
@@ -114,14 +129,17 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
           <div className="flex items-center gap-3">
             {avatar ? (
               <div className="relative h-12 w-12 shrink-0">
-                <img
+                <Image
                   src={avatar}
                   alt="Preview"
+                  width={48}
+                  height={48}
                   className="h-full w-full rounded-full object-cover ring-1 ring-border-subtle"
+                  unoptimized
                 />
                 <button
                   type="button"
-                  onClick={() => setAvatar(undefined)}
+                  onClick={() => _setAvatar(undefined)}
                   className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-white text-[10px] leading-none"
                   aria-label="Hapus foto"
                 >×</button>
@@ -172,8 +190,14 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
             </>
           )}
 
-          <Button type="submit" disabled={!name.trim() || isDuplicate} className="w-full h-10">
-            {isEdit ? 'Simpan Perubahan' : 'Tambah'}
+          <Button type="submit" disabled={!name.trim() || isDuplicate || createMember.isPending || updateMember.isPending} className="w-full h-10">
+            {createMember.isPending || updateMember.isPending ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Menyimpan...</>
+            ) : isEdit ? (
+              'Simpan Perubahan'
+            ) : (
+              'Tambah'
+            )}
           </Button>
 
           {isEdit && (
@@ -186,13 +210,13 @@ export function MemberForm({ open, onOpenChange, editMember, onMemberAdded }: Me
                 <AlertDialogHeader>
                   <AlertDialogTitle>Hapus Anggota?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Apakah kamu yakin ingin menghapus <strong>{editMember.name}</strong>? Data tidak bisa dikembalikan.
+                    Apakah kamu yakin ingin menghapus <strong>{editMember?.name}</strong>? Data tidak bisa dikembalikan.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Batal</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-danger text-white hover:bg-danger/90">
-                    Ya, Hapus
+                  <AlertDialogAction onClick={handleDelete} className="bg-danger text-white hover:bg-danger/90" disabled={deleteMember.isPending}>
+                    {deleteMember.isPending ? 'Menghapus...' : 'Ya, Hapus'}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

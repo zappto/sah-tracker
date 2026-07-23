@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown, Users } from 'lucide-react'
 import { cn, getPastelColor } from '@/lib/utils'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import { useDashboard } from '@/hooks/use-dashboard'
 
 interface MemberSelectProps {
   value: string
@@ -12,10 +12,10 @@ interface MemberSelectProps {
 }
 
 export function MemberSelect({ value, onChange, error }: MemberSelectProps) {
-  const { data } = useDashboard()
+  const { data, isLoading } = useDashboard()
   const [open, setOpen] = useState(false)
 
-  const selected = data.members.find((m) => m.name === value)
+  const selected = data?.members.find((m) => m.name === value)
 
   return (
     <div className="relative">
@@ -45,10 +45,10 @@ export function MemberSelect({ value, onChange, error }: MemberSelectProps) {
 
       {open && (
         <div className="mt-1 rounded-lg border border-border-subtle bg-white max-h-52 overflow-y-auto">
-          {data.members.length === 0 ? (
+          {!data || data.members.length === 0 ? (
             <p className="px-4 py-3 text-sm text-text-muted">Belum ada member</p>
           ) : (
-            data.members.map((member) => {
+            data?.members.map((member) => {
               const active = value === member.name
               const color = getPastelColor(member.name)
               return (

@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { loginSchema, type LoginFormData } from '@/lib/validation'
+import { isLoggedIn, login } from '@/lib/auth'
 import { FloatingInput } from '@/components/ui/floating-input'
 import { Button } from '@/components/ui/button'
 
@@ -13,13 +14,11 @@ export function LoginForm() {
   const [apiError, setApiError] = useState<string | null>(null)
 
   useEffect(() => {
-    const check = async () => {
-      const { isLoggedIn } = await import('@/lib/auth')
-      if (isLoggedIn()) {
+    isLoggedIn().then((loggedIn) => {
+      if (loggedIn) {
         window.location.assign('/admin/dashboard')
       }
-    }
-    check()
+    })
   }, [])
 
   const {
@@ -36,11 +35,13 @@ export function LoginForm() {
 
   const onSubmit = async () => {
     setApiError(null)
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    const { login } = await import('@/lib/auth')
-    login(usernameValue || 'admin')
-    toast.success('Berhasil masuk')
-    window.location.assign('/admin/dashboard')
+    try {
+      await login(usernameValue || 'admin')
+      toast.success('Berhasil masuk')
+      window.location.assign('/admin/dashboard')
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Gagal login')
+    }
   }
 
   return (

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown, Wallet } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useDashboard } from '@/lib/hooks/use-dashboard'
+import { useDashboard } from '@/hooks/use-dashboard'
 import type { ComponentType } from 'react'
 import {
   Wallet as WalletIcon, Utensils, Cookie, Car, Coffee, Navigation, Gamepad2, Smartphone, Layers,
@@ -24,9 +24,9 @@ interface PocketSelectProps {
 }
 
 export function PocketSelect({ value, onChange, error }: PocketSelectProps) {
-  const { data } = useDashboard()
+  const { data, isLoading } = useDashboard()
   const [open, setOpen] = useState(false)
-  const selected = data.pockets.find((p) => p.name === value)
+  const selected = data?.pockets.find((p) => p.name === value)
 
   return (
     <div className="relative">
@@ -60,7 +60,7 @@ export function PocketSelect({ value, onChange, error }: PocketSelectProps) {
 
       {open && (
         <div className="mt-1 rounded-lg border border-border-subtle bg-white max-h-52 overflow-y-auto">
-          {data.pockets.map((pocket) => {
+            {data?.pockets.map((pocket) => {
             const active = value === pocket.name
             const Icon = resolveIcon(pocket.icon)
             return (
