@@ -51,4 +51,5 @@ next-env.d.ts
 .cursor/*
 .github/*
 /skills-lock.json
+/skills-lock.json
 
